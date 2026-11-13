@@ -1,1 +1,395 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find The Friend</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:Arial,sans-serif;
+background:#101323;
+color:white;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+}
+
+.game{
+width:100%;
+max-width:430px;
+background:#191e35;
+border:1px solid #303653;
+border-radius:24px;
+padding:25px 20px;
+text-align:center;
+box-shadow:0 15px 50px #0006;
+}
+
+.logo{
+font-size:27px;
+font-weight:900;
+letter-spacing:1px;
+margin-bottom:8px;
+}
+
+.logo span{
+color:#a78bfa;
+}
+
+.subtitle{
+font-size:11px;
+color:#929ab7;
+letter-spacing:3px;
+margin-bottom:28px;
+}
+
+.counter{
+font-size:12px;
+color:#a78bfa;
+margin-bottom:15px;
+}
+
+.question-box{
+background:#242b49;
+padding:30px 15px;
+border-radius:17px;
+margin-bottom:20px;
+min-height:135px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.question{
+font-size:25px;
+font-weight:800;
+line-height:1.4;
+}
+
+.input{
+width:100%;
+padding:16px;
+border:1px solid #3b4261;
+border-radius:12px;
+outline:none;
+background:#101629;
+color:white;
+font-size:16px;
+margin-bottom:14px;
+}
+
+.input:focus{
+border-color:#a78bfa;
+}
+
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:12px;
+font-size:15px;
+font-weight:800;
+cursor:pointer;
+transition:.2s;
+}
+
+button:active{
+transform:scale(.97);
+}
+
+.check-btn{
+background:#8b5cf6;
+color:white;
+}
+
+.next-btn{
+background:#242b49;
+color:white;
+border:1px solid #8b5cf6;
+margin-top:12px;
+}
+
+.result{
+display:none;
+margin-top:25px;
+animation:show .5s ease;
+}
+
+@keyframes show{
+from{
+opacity:0;
+transform:translateY(15px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.result-label{
+font-size:12px;
+letter-spacing:3px;
+color:#a78bfa;
+font-weight:bold;
+margin-bottom:15px;
+}
+
+.friend-img{
+width:190px;
+height:190px;
+object-fit:cover;
+border-radius:20px;
+border:3px solid #a78bfa;
+}
+
+.friend-name{
+font-size:28px;
+font-weight:900;
+margin-top:15px;
+}
+
+.answer-status{
+display:inline-block;
+margin-top:10px;
+padding:8px 16px;
+border-radius:30px;
+font-size:11px;
+font-weight:bold;
+background:#174b3b;
+color:#6ee7b7;
+}
+
+.footer{
+font-size:11px;
+color:#707995;
+margin-top:25px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+<div class="logo">FIND THE <span>FRIEND</span></div>
+<div class="subtitle">WHO IS MOST LIKELY TO?</div>
+
+<div class="counter" id="counter">QUESTION 1</div>
+
+<div class="question-box">
+<div class="question" id="question">
+Loading Question...
+</div>
+</div>
+
+<input
+type="text"
+class="input"
+id="answerInput"
+placeholder="Type your friend's name..."
+autocomplete="off"
+>
+
+<button class="check-btn" id="checkBtn" onclick="checkAnswer()">
+CHECK ANSWER
+</button>
+
+<div class="result" id="result">
+
+<div class="result-label">THE ANSWER IS...</div>
+
+<img class="friend-img" id="friendImage" src="" alt="Friend">
+
+<div class="friend-name" id="friendName"></div>
+
+<div class="answer-status">✓ CORRECT ANSWER</div>
+
+</div>
+
+<button class="next-btn" id="nextBtn" onclick="nextQuestion()" style="display:none">
+NEXT QUESTION →
+</button>
+
+<div class="footer">
+MADE FOR FRIENDS ❤️
+</div>
+
+</div>
+
+<audio id="bgm" src="bgm.mp3" preload="auto"></audio>
+
+<script>
+
+// ===================================
+// ADD YOUR QUESTIONS AND FRIENDS HERE
+// ===================================
+
+const questions = [
+
+{
+question: "Class a k beshi ghumai?",
+answer: "Rafi",
+image: "rafi.jpg"
+},
+
+{
+question: "Class a k sobcheye beshi kotha bole?",
+answer: "Friend 2",
+image: "friend2.jpg"
+},
+
+{
+question: "Ke sobcheye beshi late kore ashe?",
+answer: "Friend 3",
+image: "friend3.jpg"
+},
+
+{
+question: "Ke sobcheye beshi moja kore?",
+answer: "Friend 4",
+image: "friend4.jpg"
+},
+
+{
+question: "Ke sobcheye beshi porashona kore?",
+answer: "Friend 5",
+image: "friend5.jpg"
+},
+
+{
+question: "Ke sobcheye beshi mobile use kore?",
+answer: "Friend 6",
+image: "friend6.jpg"
+},
+
+{
+question: "Ke sobcheye beshi dustami kore?",
+answer: "Friend 7",
+image: "friend7.jpg"
+}
+
+];
+
+// ===================================
+// GAME SYSTEM
+// ===================================
+
+let availableQuestions = [];
+let currentQuestion = null;
+let questionNumber = 0;
+
+const questionText = document.getElementById("question");
+const counter = document.getElementById("counter");
+const input = document.getElementById("answerInput");
+const result = document.getElementById("result");
+const checkBtn = document.getElementById("checkBtn");
+const nextBtn = document.getElementById("nextBtn");
+const bgm = document.getElementById("bgm");
+
+// Random question without repeating
+function getRandomQuestion(){
+
+if(availableQuestions.length === 0){
+availableQuestions = [...questions];
+}
+
+const randomIndex = Math.floor(
+Math.random() * availableQuestions.length
+);
+
+return availableQuestions.splice(randomIndex,1)[0];
+
+}
+
+// Load question
+function loadQuestion(){
+
+currentQuestion = getRandomQuestion();
+
+questionNumber++;
+
+questionText.textContent = currentQuestion.question;
+
+counter.textContent =
+"QUESTION " + questionNumber + " / " + questions.length;
+
+input.value = "";
+
+input.disabled = false;
+
+result.style.display = "none";
+
+checkBtn.style.display = "block";
+checkBtn.disabled = false;
+
+nextBtn.style.display = "none";
+
+}
+
+// Check answer
+function checkAnswer(){
+
+if(!input.value.trim()){
+input.focus();
+input.placeholder = "Please enter a name first!";
+return;
+}
+
+// Play BGM
+bgm.currentTime = 0;
+bgm.play().catch(()=>{});
+
+// Show correct answer
+document.getElementById("friendImage").src =
+currentQuestion.image;
+
+document.getElementById("friendName").textContent =
+currentQuestion.answer.toUpperCase();
+
+result.style.display = "block";
+
+input.disabled = true;
+
+checkBtn.style.display = "none";
+nextBtn.style.display = "block";
+
+}
+
+// Next question
+function nextQuestion(){
+
+if(availableQuestions.length === 0){
+questionNumber = 0;
+}
+
+loadQuestion();
+
+}
+
+// Enter key support
+input.addEventListener("keydown",function(e){
+
+if(e.key === "Enter" && !input.disabled){
+checkAnswer();
+}
+
+});
+
+// Start game
+loadQuestion();
+
+</script>
+
+</body>
+  </html>
+  
